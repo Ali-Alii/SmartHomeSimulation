@@ -1,0 +1,106 @@
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <string>
+
+class Device {
+protected:
+    std::string name;
+public:
+    Device(const std::string& name) : name(name) {}
+    virtual void toggle() = 0;
+    virtual void status() const = 0;
+    virtual ~Device() {}
+};
+
+class Light : public Device {
+    bool isOn;
+public:
+    Light(const std::string& name) : Device(name), isOn(false) {}
+    void toggle() override {
+        isOn = !isOn;
+    }
+    void status() const override {
+        std::cout << name << ": Light is " << (isOn ? "On" : "Off") << "\n";
+    }
+};
+
+class Thermostat : public Device {
+    int temperature;
+public:
+    Thermostat(const std::string& name, int temp = 22) : Device(name), temperature(temp) {}
+    void toggle() override {
+        std::cout << "Enter new temperature for " << name << ": ";
+        std::cin >> temperature;
+    }
+    void status() const override {
+        std::cout << name << ": Thermostat set to " << temperature << "°C\n";
+    }
+};
+
+class Door : public Device {
+    bool isLocked;
+public:
+    Door(const std::string& name) : Device(name), isLocked(true) {}
+    void toggle() override {
+        isLocked = !isLocked;
+    }
+    void status() const override {
+        std::cout << name << ": Door is " << (isLocked ? "Locked" : "Unlocked") << "\n";
+    }
+};
+
+class Controller {
+    std::vector<std::shared_ptr<Device>> devices;
+public:
+    void addDevice(std::shared_ptr<Device> device) {
+        devices.push_back(device);
+    }
+    void listDevices() const {
+        for (size_t i = 0; i < devices.size(); ++i) {
+            std::cout << i+1 << ". ";
+            devices[i]->status();
+        }
+    }
+    void toggleDevice(int index) {
+        if (index >= 1 && index <= (int)devices.size()) {
+            devices[index - 1]->toggle();
+        } else {
+            std::cout << "Invalid index.\n";
+        }
+    }
+};
+
+int main() {
+    Controller controller;
+    controller.addDevice(std::make_shared<Light>("Living Room Light"));
+    controller.addDevice(std::make_shared<Thermostat>("Hallway Thermostat"));
+    controller.addDevice(std::make_shared<Door>("Main Door"));
+
+    int choice;
+    while (true) {
+        std::cout << "\n==== Smart Home Menu ====\n";
+        std::cout << "1. List Devices\n";
+        std::cout << "2. Toggle Device\n";
+        std::cout << "3. Exit\n";
+        std::cout << "Choice: ";
+        std::cin >> choice;
+
+        switch (choice) {
+            case 1:
+                controller.listDevices();
+                break;
+            case 2:
+                std::cout << "Enter device number: ";
+                int idx;
+                std::cin >> idx;
+                controller.toggleDevice(idx);
+                break;
+            case 3:
+                return 0;
+            default:
+                std::cout << "Invalid choice.\n";
+        }
+    }
+    return 0;
+}
